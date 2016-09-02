@@ -1,0 +1,176 @@
+<!--
+@license
+Copyright (c) 2016 Expert System. All rights reserved.
+This code may only be used under the BSD style license.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-item.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-kb-entity-item.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-kb-entity-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-object-inspector-behavior.html">
+
+<dom-module id="showcase-search">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+     section {
+         width: 400px;
+         max-height: 350px;
+         max-width: 500px;
+         height: 350px;               
+         @apply(--layout-vertical);
+     }
+     section paper-dialog-scrollable {
+         @apply(--layout-flex);
+     }
+     
+      span,
+      input {
+        @apply(--paper-font-body2);
+      }
+
+     paper-spinner {
+         position: absolute;
+     }
+     
+    </style>
+
+    <paper-input label="text to search" value="{{_searchValue}}"></paper-input>
+    <iron-ajax url="[[baseXlimeServiceUrl]]/services/search" params='[[_searchParams(_searchValue)]]' last-response="{{latestSearchResults}}"
+                 loading="{{isSearching}}" debounce-duration="500" auto></iron-ajax>
+    <div class="layout horizontal" style="display: flex;">
+        <section id="resultPreview">
+            <paper-tabs selected="{{selectedTab}}">
+                <paper-tab>Matched media</paper-tab>
+                <paper-tab>Did you mean</paper-tab>
+            </paper-tabs>
+
+            <paper-spinner alt="Searching " class="center" active="[[isSearching]]">Searching ...</paper-spinner>
+            <paper-dialog-scrollable id="mediaItemsScrollable" >
+            <iron-pages selected="[[selectedTab]]">
+                <paper-listbox id="mediaItems" on-iron-select="_handleResourceSelect" on-iron-deselect="_handleResourceDeselect">
+                        <template is="dom-repeat" items="{{latestSearchResults.mediaItems}}">
+                            <xlime-media-item-item item="{{item}}"></xlime-media-item-item>
+                        </template>
+                </paper-listbox>
+                <paper-listbox id="kbEntities" on-iron-select="_handleResourceSelect" on-iron-deselect="_handleResourceDeselect">
+                        <template is="dom-repeat" items="{{latestSearchResults.entities}}">
+                            <xlime-kb-entity-item entity="{{item}}"></xlime-kb-entity-item>
+                        </template>
+                </paper-listbox>
+            </iron-pages>
+            </paper-dialog-scrollable>
+        </section>
+        <section>
+            <h4>Selected information to add to context:</h4>
+            <paper-card heading="{{_searchValue}}" on-tap="_selectSearchValue">
+                <div>Search String to be added to context</div>
+            </paper-card>
+            <xlime-media-item-card hidden$="[[!isMediaItem(selectedResource)]]" id="mediaItemCard" item-obj="[[selectedResource]]">
+            </xlime-media-item-card>
+            <xlime-kb-entity-card hidden$="[[!isKBEntity(selectedResource)]]" entity="[[selectedEntity]]"></xlime-kb-entity-card>
+        </section>
+        <!-- 
+        <div>selected res [[selectedResource]], isMediaItem: [[isMediaItem(selectedResource)]], isKBEntity: [[isKBEntity(selectedResource)]]</div>
+         -->
+    </div>
+    
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'showcase-search',
+
+        behaviors: [XLiMe.ObjectInspectorBehavior],
+          
+        properties: {
+          /**
+           * The object that has been currently selected.
+           */
+          selectedResource: {
+            type: Object,
+            notify: true
+          },
+          selectedTab: {
+              type: Number,
+              value: 0
+          },
+          _searchValue: {
+              type: String,
+              notify: true,
+              observer: "_onSearchValueChange"
+          },
+          baseXlimeServiceUrl: {
+              type: String,
+              value: "http://localhost:8080" //"http://expertsystemlab.com:8080/frontend-services"
+          }
+            
+        },
+
+        _searchParams: function(query) {
+            var params = {};
+            if (query) {
+                params.q = query;
+            }
+            return params;
+        },
+        _selectSearchValue: function(e, detail) {
+            this.selectedResource = this._searchStringObj();
+        },
+        _searchStringObj: function() {
+            if (this._searchValue) {
+                var obj = {};
+                obj.value = this._searchValue;
+                obj['@type'] = "http://xlime.eu/vocab/searchString";
+                obj.url = "http://xlime.eu/vocab/search?q=" + encodeURI(this._searchValue);
+                return obj;
+            } else return null;
+        },
+        _onSearchValueChange: function(old, newValue) {
+            console.log("handling change of _searchValue", this._searchValue);
+            this.selectedResource = this._searchStringObj();
+        },
+        _handleResourceDeselect: function(e, detail) {
+            console.log("handlign resource deselection: ", e);
+            this.selectedResource = null;
+        },
+        _handleResourceSelect: function(e, detail) {
+            console.log("handlign resource selection: ", e);
+            /*
+            console.log("handlign media-item selection: ", detail);
+            console.log("mediaItemsSection: ", this.$.mediaItemsSection);
+            console.log("mediaItemsScrollable: ", this.$.mediaItemsScrollable);
+            console.log("mediaItemsScrollable.dialogElement: ", this.$.mediaItemsScrollable.dialogElement);
+            */
+            // bind to #mediaItemCard.itemObj to show details
+            var elt = detail.item;
+            if (elt.item) this.selectedResource = elt.item;
+            else if (elt.entity) this.selectedResource = elt.entity;
+            console.log("selected ", this.selectedResource);
+        }
+          
+
+      });
+    })();
+  </script>
+</dom-module>

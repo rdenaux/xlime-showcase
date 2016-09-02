@@ -1,0 +1,104 @@
+<!--
+@license
+Copyright (c) 2016 Expert System. All rights reserved.
+This code may only be used under the BSD style license.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-kb-entity-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-card.html">
+
+<dom-module id="showcase-resource">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+      span,
+      input {
+        @apply(--paper-font-body2);
+      }
+
+     paper-dialog-scrollable {
+         width: 500px;
+         height: 400px;
+     }
+    </style>
+
+    <h3>Details about selected</h3>
+    <iron-ajax id="ajaxEntSumma" url="[[baseXlimeServiceUrl]]/services/entities" last-response="{{entitySummas}}"
+               loading="{{loadingEntitySumma}}"></iron-ajax>
+    <paper-spinner alt="Loading entity details" class="center" active="[[loadingEntitySumma]]">Loading entity details</paper-spinner>
+    <xlime-kb-entity-card hidden$="[[!_isKBEntity]]" entity="[[getEntity(entitySummas.*, 0)]]"></xlime-kb-entity-card>
+    <xlime-media-item-card hidden$="[[!_isMediaItem]]" item-obj="{{resource}}"></xlime-media-item-card>
+    <span>selected resource: {{resource.url}}, isKBEntity: [[_isKBEntity]], isMediaItem: [[_isMediaItem]]</span>     
+    
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'showcase-resource',
+
+        behaviors: [XLiMe.ObjectInspectorBehavior],
+          
+        properties: {
+          /**
+           * The object that has been currently selected.
+           */
+          resource: {
+            type: Object,
+              notify: true,
+            observer: '_handleResourceChanged'
+          },
+            baseXlimeServiceUrl: {
+                type: String,
+                value: "http://localhost:8080"
+            },
+            _isKBEntity: {
+                type: Boolean,
+                computed: 'isKBEntity(resource)'
+            },
+            _kbEntityUrl: {
+                type: String,
+                computed: '_calcKBEntityUrl(resource)',
+                observer: '_handleNewKBEntityUrl'
+            },
+            _isMediaItem: {
+                type: Boolean,
+                computed: 'isMediaItem(resource)'
+            }
+        },
+        _handleResourceChanged: function(newValue, oldValue) {
+            console.log("Selected Resource to display changed to ", newValue);
+            if (this.isKBEntity(this.resource)) {
+                var ajax = this.$.ajaxEntSumma;
+                var params = {};
+                params.url = this.resource.url;
+                ajax.params = params;
+                ajax.generateRequest();
+            }
+        },
+        _handleNewKBEntityUrl: function(newValue, oldValue) {
+            console.log("Selected Resource to display changed to ", newValue);
+        },
+        _calcKBEntityUrl: function(resource) {
+            if (this.isKBEntity(resource)) {
+                return resource.url;
+            } else null;
+        },
+        getEntity: function(change, index) {
+            console.log("extracting entity summary from array");
+            return change.base[index];
+        }
+
+      });
+    })();
+  </script>
+</dom-module>

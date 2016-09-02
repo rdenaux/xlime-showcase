@@ -1,0 +1,112 @@
+<!--
+@license
+Copyright (c) 2016 Expert System. All rights reserved.
+This code may only be used under the BSD style license.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-item.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-card.html">
+
+<dom-module id="showcase-recently-published">
+  <template>
+    <style include="shared-styles" include="iron-flex">
+/*      :host {
+        display: block;
+      }
+*/
+     section {
+         width: 400px;
+         max-height: 350px;
+         max-width: 500px;
+         height: 350px;               
+         @apply(--layout-vertical);
+     }
+     section paper-dialog-scrollable {
+         @apply(--layout-flex);
+     }
+
+     #mediaItemCard {
+         width: 400px;
+     }
+     span,
+     input {
+         @apply(--paper-font-body2);
+     }
+
+     paper-spinner {
+         position: absolute;
+     }
+    </style>
+
+    <iron-ajax url="[[baseXlimeServiceUrl]]/services/latestMediaItems" params='{"minutes": 10000}' last-response="{{latestMediaItems}}"
+                 loading="{{latestMediaItemsLoading}}" auto></iron-ajax>
+    <div class="layout horizontal" style="display: flex;">
+        <section id="mediaItemsSection">
+            <paper-spinner alt="Loading media items" class="center" active="[[latestMediaItemsLoading]]">Loading recently published items...</paper-spinner>
+            <paper-dialog-scrollable id="mediaItemsScrollable" >
+                <paper-listbox id="mediaItems" on-iron-select="_handleMediaItemSelect" on-iron-deselect="_handleMediaItemDeselect">
+                    <template is="dom-repeat" items="{{latestMediaItems.mediaItems}}">
+                        <xlime-media-item-item item="{{item}}"></xlime-media-item-item>
+                    </template>
+                </paper-listbox>
+            </paper-dialog-scrollable>
+        </section>
+        <section>
+            <h4>Selected media-item:</h4>
+            <xlime-media-item-card id="mediaItemCard" item-obj="[[selectedResource]]">
+            </xlime-media-item-card>
+        </section>
+    </div>
+    
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'showcase-recently-published',
+
+        properties: {
+          /**
+           * The object that has been currently selected.
+           */
+          selectedResource: {
+            type: Object,
+            notify: true
+          },
+          baseXlimeServiceUrl: {
+              type: String,
+              value: "http://localhost:8080"
+          }
+            
+        },
+        _handleMediaItemDeselect: function(e, detail) {
+            console.log("handlign media-item deselection: ", e);
+            this.selectedResource = null;
+        },
+        _handleMediaItemSelect: function(e, detail) {
+            console.log("handlign media-item selection: ", e);
+            /*
+            console.log("handlign media-item selection: ", detail);
+            console.log("mediaItemsSection: ", this.$.mediaItemsSection);
+            console.log("mediaItemsScrollable: ", this.$.mediaItemsScrollable);
+            console.log("mediaItemsScrollable.dialogElement: ", this.$.mediaItemsScrollable.dialogElement);
+            */
+            // bind to #mediaItemCard.itemObj to show details
+            this.selectedResource = detail.item.item;
+            console.log("selected ", this.selectedResource);
+        }
+
+      });
+    })();
+  </script>
+</dom-module>
