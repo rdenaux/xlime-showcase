@@ -57,10 +57,10 @@ This code may only be used under the BSD style license.
               notify: true,
             observer: '_handleResourceChanged'
           },
-            baseXlimeServiceUrl: {
-                type: String,
-                value: "http://localhost:8080"
-            },
+          /**
+           * Base url of an xLiMe frontend-services endpoint. Used for loading entity summarisations
+           */
+            baseXlimeServiceUrl: String,
             _isKBEntity: {
                 type: Boolean,
                 computed: 'isKBEntity(resource)'

@@ -27,11 +27,20 @@ This code may only be used under the BSD style license.
         @apply(--paper-font-body2);
       }
 
-     paper-fab {
-       position: absolute;
+     paper-fab  {
          z-index: 20;
          color: black;
      }
+
+     #searchfab {
+         position: absolute;
+         left: 0;
+     }
+     #searchfab {
+         position: absolute;
+         left: 70;
+     }
+     
      paper-spinner {
          position: absolute;
          z-indx: 20;
@@ -40,29 +49,36 @@ This code may only be used under the BSD style license.
        width: 630px;
        height: 630px;
      }
+
+     #spheres-card {
+       min-width: 650px;
+       min-height: 650px;
+     }
+
+     xlime-spheres {
+         display: inline-block;
+         float: left;
+     }
+
+     showcase-resource  {
+         display: inline-block;
+         float: left;
+         max-width: 500px;
+         padding-left: 2em;
+     }
+     
     </style>
 
-    <paper-fab icon="add" title="add information to your context to browse cross-modally and cross-lingually" on-tap="_onAddContextElementTap"></paper-fab>
-    <iron-ajax id="spheresAjax" url="[[baseXlimeServiceUrl]]/services/spheres" params='{"context": []}' last-response="{{latestSpheres}}"
+    <paper-fab id="searchfab" icon="search" title="Search for media items and add results to the spheres context" on-tap="_onSearchElementTap"></paper-fab>
+    <paper-fab id="recentfab" icon="alarm" title="Browse recently published media items and add selected items to the spheres context" on-tap="_onRecentElementTap"></paper-fab>    
+    <paper-material id="spheres-card" elevation="1">
+        <iron-ajax id="spheresAjax" url="[[baseXlimeServiceUrl]]/services/spheres" params='{"context": []}' last-response="{{latestSpheres}}"
                loading="{{_latestSpheresLoading}}"></iron-ajax>
-    <paper-spinner alt="Loading spheres" class="center" active="[[_latestSpheresLoading]]">Loading spheres...</paper-spinner>
-    <xlime-spheres id="spheres" obj="{{latestSpheres}}" selected="{{selectedInSphere}}" on-spheres-resource-removed="_onSpheresResourceRemoved"></xlime-spheres>
-    <paper-dialog id="addContextDialog" on-iron-overlay-closed="_handleAddContextDialogClosed">
-        <showcase-resource-selector selected-resource="{{resourceToAdd}}">
-        </showcase-resource-selector>
-        <!-- 
-        <div>Resource to Add: [[resourceToAdd.url]]</div>
-         -->
-        <div class="buttons">
-            <paper-button dialog-dismiss>Cancel</paper-button>
-            <paper-button dialog-confirm disabled$="[[!resourceToAdd]]" autofocus>Add</paper-button>
-        </div>
-    </paper-dialog>
-    <!-- 
-    <span>Selected in sphere: [[selectedInSphere.url]]</span>
-     -->
-    <showcase-resource resource="{{selectedInSphere}}">
-    </showcase-resource>
+        <paper-spinner alt="Loading spheres" class="center" active="[[_latestSpheresLoading]]">Loading spheres...</paper-spinner>
+        <xlime-spheres id="spheres" obj="{{latestSpheres}}" selected="{{selectedInSphere}}" on-spheres-resource-removed="_onSpheresResourceRemoved"></xlime-spheres>
+        <showcase-resource base-xlime-service-url="[[baseXlimeServiceUrl]]" resource="{{selectedInSphere}}">
+        </showcase-resource>
+    </paper-material>
   </template>
 
   <script>
@@ -78,18 +94,59 @@ This code may only be used under the BSD style license.
             value: null,
               listener: '_handleResourceToAddChange'
           },
-
-          baseXlimeServiceUrl: {
-              type: String,
-              value: "http://localhost:8080"
-          }
+          /**
+           * Base url used to call an xLiMe frontend-services endpoint. In this element, 
+           * this is used for loading the spheres and for displaying additional information 
+           * for selected resources.
+           */
+          baseXlimeServiceUrl: String
             
         },
 
+    created: function() {
+        console.log(this.localName + '#' + this.id + ' was created');
+    },
+      
+    ready: function() {
+      // `ready` is called after all elements have been configured, but
+      // propagates bottom-up. This element's children are ready, but parents
+      // are not.
+      //
+      // This is the point where you should make modifications to the DOM (when
+        // necessary), or kick off any processes the element wants to perform.
+        //console.log("The jassa attribute ", _jassa);
+        console.log("ready The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+        console.log("attached The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+          
         _onAddContextElementTap: function(e, detail) {
            this.$.addContextDialog.open();
         },
 
+        _onSearchElementTap: function(e, detail) {
+            page('/search');
+        },
+
+        _onRecentElementTap: function(e, detail) {
+              page('/recent');
+        },
+          
         _onSpheresResourceRemoved: function(e, detail) {
             var context = [];
             if (this.latestSpheres && this.latestSpheres.inner) {
@@ -115,26 +172,29 @@ This code may only be used under the BSD style license.
         _handleAddContextDialogClosed: function(closingReason) {
             console.log("Dialog closed with reason", closingReason);
             if (closingReason.detail && closingReason.detail.confirmed) {
-                //   this.spheres.addToInner(this.resourceToAdd);
-                var context = [];
-                if (this.latestSpheres && this.latestSpheres.inner) {
-                    for (var i = 0; i < this.latestSpheres.inner.length; i++) {
-                        var rec = this.latestSpheres.inner[i].recommended;
-                        if (rec && rec.url) {
-                            context.push(rec.url);
-                        }
+                console.debug("")
+                this.addToSpheres(this.resourceToAdd);
+            }
+        },
+        addToSpheres: function(resToAdd) {
+            //   this.spheres.addToInner(resToAdd);
+            var context = [];
+            if (this.latestSpheres && this.latestSpheres.inner) {
+                for (var i = 0; i < this.latestSpheres.inner.length; i++) {
+                    var rec = this.latestSpheres.inner[i].recommended;
+                    if (rec && rec.url) {
+                        context.push(rec.url);
                     }
                 }
-                context.push(this.resourceToAdd.url);
-                var params = {
-                    context: context
-                }
-                console.log("Calling spheres with context: ", params);
-                this.$.spheresAjax.params = params;
-                this.$.spheresAjax.generateRequest();
             }
+            context.push(resToAdd.url);
+            var params = {
+                context: context
+            }
+            console.log("Calling spheres with context: ", params);
+            this.$.spheresAjax.params = params;
+            this.$.spheresAjax.generateRequest();
         }
-          
       });
     })();
   </script>

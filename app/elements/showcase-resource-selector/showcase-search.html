@@ -120,10 +120,11 @@ This code may only be used under the BSD style license.
               notify: true,
               observer: "_onSearchValueChange"
           },
-          baseXlimeServiceUrl: {
-              type: String,
-              value: "http://localhost:8080" //"http://expertsystemlab.com:8080/frontend-services"
-          }
+          /**
+           * Base url for an xLiMe frontend-services endpoint. Used to perform the search.
+           * Examples: `http://localhost:8080` or `http://expertsystemlab.com:8080/frontend-services`
+           */
+          baseXlimeServiceUrl: String 
             
         },
 

@@ -1,0 +1,77 @@
+<!--
+@license
+Copyright (c) 2016 Expert System. All rights reserved.
+This code may only be used under the BSD style license.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../showcase-resource-selector/showcase-recently-published.html">
+
+<dom-module id="my-recent">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+      span,
+      input {
+        @apply(--paper-font-body2);
+      }
+
+     paper-fab {
+       position: absolute;
+         z-index: 20;
+         color: black;
+     }
+    </style>
+
+    <h2 class="page-title">Recently in the media</h2>
+    <p>See what has recently been published in news, broadcast on tv or posted in social media (and add it to your sphere context)</p>
+    <showcase-recently-published base-xlime-service-url="[[baseXlimeServiceUrl]]" selected-resource="{{selectedResource}}"></showcase-recently-published>
+    <paper-fab disabled="[[!_hasSelectedResource]]" icon="add" title="add selected item to your spheres context to browse cross-modally and cross-lingually" on-tap="_onAddContextElementTap"></paper-fab>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'my-recent',
+
+        properties: {
+          selectedResource: {
+            type: Object,
+            notify: true
+          },
+          _hasSelectedResource: {
+              type: Boolean,
+              computed: '_isValid(selectedResource)'
+          },
+          /**
+           * Base url for an xLiMe frontend-services endpoint. Used to retrieve the recently published/processed resources.
+           */
+          baseXlimeServiceUrl: String
+        },
+        _isValid: function(obj) {
+            if (obj) {
+                console.debug("truthy selected resouce: ", obj);
+                return true;   
+            }
+            else {
+                console.debug("falsey selected resouce: ", obj);
+                return false;
+            }
+        },
+        _onAddContextElementTap: function(e, detail) {
+            var newDetail = {resourceToAdd: this.selectedResource};
+            console.debug("Firing addresource event with detail", newDetail);
+            this.fire('addresource', newDetail);
+        }
+          
+      });
+    })();
+  </script>
+</dom-module>
+

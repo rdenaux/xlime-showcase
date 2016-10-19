@@ -16,7 +16,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   var app = document.querySelector('#app');
 
   // Sets app default base URL
-  app.baseUrl = '/';
+    app.baseUrl = '/';
+    app.baseXlimeServiceUrl =
+//        'http://localhost:8080';
+        'http://172.16.32.71:8080/frontend-services';
+    
   if (window.location.port === '') {  // if production
     // Uncomment app.baseURL below and
     // set app.baseURL to '/your-pathname/' if running from folder in production
@@ -33,7 +37,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // Listen for template bound event to know when bindings
   // have resolved and content has been stamped to the page
   app.addEventListener('dom-change', function() {
-    console.log('Our app is ready to rock!');
+      console.log('Our app is ready to rock!');
+
+      console.debug("Registering onAddRecentResource handler");
+      var onAddRecentResource = function (e) {
+       console.log("Caught addresource event", e);
+          console.log(e.detail.resourceToAdd); // true
+          app.addResourceToSpheres(e.detail.resourceToAdd);
+          page('/home');
+      };
+      var myRecentElt = Polymer.dom(document).querySelector('my-recent');
+      console.debug("onAddRecentResource myRecentElt", myRecentElt);
+      myRecentElt.addEventListener('addresource', onAddRecentResource);
+      console.debug("added onAddRecentResource handler", myRecentElt);
+      var mySearchElt = Polymer.dom(document).querySelector('my-search');
+      mySearchElt.addEventListener('addresource', onAddRecentResource);
+
   });
 
   // See https://github.com/Polymer/polymer/issues/1381
@@ -77,5 +96,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.closeDrawer = function() {
     app.$.paperDrawerPanel.closeDrawer();
   };
+
+  app.addResourceToSpheres = function(resToAdd) {
+      app.$.theSpheres.addToSpheres(resToAdd);
+  }
 
 })(document);

@@ -53,10 +53,6 @@ This code may only be used under the BSD style license.
 
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles">
-   #spheres-card {
-       min-width: 650px;
-       min-height: 650px;
-   }
   </style>
 </head>
 
@@ -80,9 +76,24 @@ This code may only be used under the BSD style license.
             <span>Home</span>
           </a>
 
+          <a data-route="search" href="{{baseUrl}}search">
+              <iron-icon icon="search"></iron-icon>
+              <span>Search</span>
+          </a>
+
+          <a data-route="recent" href="{{baseUrl}}recent">
+              <iron-icon icon="alarm"></iron-icon>
+              <span>Recent</span>
+          </a>
+          
+          <a data-route="dataset" href="{{baseUrl}}dataset">
+              <iron-icon icon="editor:insert-chart"></iron-icon>
+              <span>Dataset</span>
+          </a>
+          
           <!-- No users 
           <a data-route="users" href="{{baseUrl}}users">
-            <iron-icon icon="info"></iron-icon>
+            <iron-icon icon="alarm"></iron-icon>
             <span>Users</span>
           </a>
           -->
@@ -90,6 +101,11 @@ This code may only be used under the BSD style license.
           <a data-route="contact" href="{{baseUrl}}contact">
             <iron-icon icon="mail"></iron-icon>
             <span>Contact</span>
+          </a>
+
+          <a data-route="about" href="{{baseUrl}}about">
+              <iron-icon icon="xlime:icon"></iron-icon>
+              <span>About</span>
           </a>
         </paper-menu>
       </paper-scroll-header-panel>
@@ -121,31 +137,7 @@ This code may only be used under the BSD style license.
         <div class="content">
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
             <section data-route="home">
-              <paper-material id="spheres-card" elevation="1">
-                  <my-spheres></my-spheres>
-              </paper-material>
-
-              <!-- 
-              <paper-material elevation="1">
-                <p>This is another card.</p>
-              </paper-material>
-              -->
-              
-              <paper-material elevation="1">
-                <h1 id="license">License</h1>
-                <p>Everything in this repo is BSD style license unless otherwise specified.</p>
-                <p>Copyright (c) 2016 xLiMe Project. All rights reserved.</p>
-                <p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
-                <ul>
-                <li>Redistributions of source code must retain the above copyright
-                notice, this list of conditions and the following disclaimer.</li>
-                <li>Redistributions in binary form must reproduce the above
-                copyright notice, this list of conditions and the following disclaimer
-                in the documentation and/or other materials provided with the
-                distribution.</li>
-                </ul>
-                <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
-              </paper-material>
+                  <my-spheres id="theSpheres" base-xlime-service-url='[[baseXlimeServiceUrl]]'></my-spheres>
             </section>
 
             <!-- 
@@ -168,18 +160,39 @@ This code may only be used under the BSD style license.
             </section>
             -->
 
+            <section data-route="search">
+                <paper-material elevation="1">
+                    <my-search base-xlime-service-url='[[baseXlimeServiceUrl]]'</my-search>
+                </paper-material>
+            </section>
+
+            <section data-route="recent">
+                <paper-material elevation="1">
+                    <my-recent base-xlime-service-url="[[baseXlimeServiceUrl]]"> </my-recent>
+                </paper-material>
+            </section>
+
+            <section data-route="dataset">
+                <paper-material elevation="1">
+                    <my-dataset base-xlime-service-url='[[baseXlimeServiceUrl]]'></my-dataset>
+                </paper-material>
+            </section>
+            
             <section data-route="contact">
-              <paper-material elevation="1">
-                <h2 class="page-title">Contact</h2>
-                <p>This is the contact section</p>
-              </paper-material>
+                <paper-material elevation="1">
+                    <my-contact></my-contact>
+                </paper-material>
+            </section>
+
+            <section data-route="about">
+                <my-about></my-about>
             </section>
           </iron-pages>
         </div>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
 
-    <paper-toast id="toast">
+    <paper-toast id="toast" duration="6000">
       <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
     </paper-toast>
 

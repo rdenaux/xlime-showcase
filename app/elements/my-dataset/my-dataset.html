@@ -1,0 +1,52 @@
+<!--
+@license
+Copyright (c) 2016 Expert System. All rights reserved.
+This code may only be used under the BSD style license.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-dataset-summary.html">
+
+<dom-module id="my-dataset">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+      span,
+      input {
+        @apply(--paper-font-body2);
+      }
+
+    </style>
+
+    <h2 class="page-title">xLiMe Live Dataset</h2>
+    <p>This is the dataset section</p>
+    
+    <iron-ajax id="datasetSumAjax" url="[[baseXlimeServiceUrl]]/services/spheres" params='{"ds": ["mongo"]}' last-response="{{latestDatasetSumObj}}"
+               loading="{{_latestDatasetSumLoading}}"></iron-ajax>
+    <paper-spinner alt="Loading dataset information" class="center" active="[[_latestDatasetSumLoading]]">Loading dataset information...</paper-spinner>
+    <xlime-dataset-summary summary-obj='[[latestDatasetSumObj]]'></xlime-dataset-summary>
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'my-dataset',
+
+        properties: {
+            /**
+             * Base url for an xLiMe frontend-services endpoint. Used to retrieve the dataset summary information.
+             */
+            baseXlimeServiceUrl: String
+        }
+          
+      });
+    })();
+  </script>
+</dom-module>

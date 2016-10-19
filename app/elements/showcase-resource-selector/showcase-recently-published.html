@@ -47,7 +47,7 @@ This code may only be used under the BSD style license.
     </style>
 
     <iron-ajax url="[[baseXlimeServiceUrl]]/services/latestMediaItems" params='{"minutes": 10000}' last-response="{{latestMediaItems}}"
-                 loading="{{latestMediaItemsLoading}}" auto></iron-ajax>
+                 loading="{{latestMediaItemsLoading}}" auto on-request='_handleOnRequest'></iron-ajax>
     <div class="layout horizontal" style="display: flex;">
         <section id="mediaItemsSection">
             <paper-spinner alt="Loading media items" class="center" active="[[latestMediaItemsLoading]]">Loading recently published items...</paper-spinner>
@@ -61,7 +61,7 @@ This code may only be used under the BSD style license.
         </section>
         <section>
             <h4>Selected media-item:</h4>
-            <xlime-media-item-card id="mediaItemCard" item-obj="[[selectedResource]]">
+            <xlime-media-item-card hiddent="[[_isValid(selectedResource)]]" id="mediaItemCard" item-obj="[[selectedResource]]">
             </xlime-media-item-card>
         </section>
     </div>
@@ -83,11 +83,17 @@ This code may only be used under the BSD style license.
             type: Object,
             notify: true
           },
-          baseXlimeServiceUrl: {
-              type: String,
-              value: "http://localhost:8080"
-          }
-            
+          /**
+           * Base Url for an xLiMe frontend-services endpoint. Used to retrieve the recently published/processed media items.
+           */
+          baseXlimeServiceUrl: String
+        },
+        _isValid: function(obj) {
+            if (obj) return true;
+            else return false;
+        },
+        _handleOnRequest: function(e, detail) {
+            this.selectedResource = null;
         },
         _handleMediaItemDeselect: function(e, detail) {
             console.log("handlign media-item deselection: ", e);

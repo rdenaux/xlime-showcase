@@ -1,0 +1,42 @@
+<!--
+@license
+Copyright (c) 2016 Expert System. All rights reserved.
+This code may only be used under the BSD style license.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id="my-contact">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+      span,
+      input {
+        @apply(--paper-font-body2);
+      }
+
+    </style>
+
+    <h2 class="page-title">Contact</h2>
+    <p>This is the contact section</p>
+    
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'my-contact',
+
+        properties: {
+            
+        }
+          
+      });
+    })();
+  </script>
+</dom-module>
