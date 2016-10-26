@@ -14,7 +14,7 @@
         "sizes": "128x128",
         "type": "image/png"
       }, {
-        "src": "images/xlime/apple-xlime-icon.png",
+        "src": "images/xlime/apple-xlime-icon-152x152.png",
         "sizes": "152x152",
         "type": "image/png"
       }, {
@@ -32,5 +32,5 @@
       }],
   "background_color": "#ffffff", 
   "display": "standalone",
-  "theme_color": "#43A047" //green 600
+  "theme_color": "#43A047"
 }
