@@ -19,12 +19,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.baseUrl = '/';
     app.baseXlimeServiceUrl =
 //        'http://localhost:8080';
-        'http://172.16.32.71:8080/frontend-services';
+          'http://expertsystemlab.com/frontend-services';
+    app.sectionName = "xLiMe Showcase";
+    app.sectionBlurb = "Cross-modal & cross-lingual media browsing";
+
+    app.selectedResource = null;
+    app.canAddSelectedResourceToSpheres = false;
+    app.reasonCannotAddToSpheres = "No resource selected";
     
   if (window.location.port === '') {  // if production
     // Uncomment app.baseURL below and
     // set app.baseURL to '/your-pathname/' if running from folder in production
-    // app.baseUrl = '/polymer-starter-kit/';
+    app.baseUrl = '/xlime-showcase-beta/';
   }
 
   app.displayInstalledToast = function() {
@@ -39,19 +45,75 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.addEventListener('dom-change', function() {
       console.log('Our app is ready to rock!');
 
-      console.debug("Registering onAddRecentResource handler");
-      var onAddRecentResource = function (e) {
-       console.log("Caught addresource event", e);
+      var onSelectedResource = function (e) {
+          console.log("Caught selectedResource change", e);
+          if (e.detail.value && app.isSearchString(e.detail.value)) {
+              app.$.theSearch.searchValue = e.detail.value.value;
+              page(app.baseUrl + 'search');
+          } else {
+              app.selectedResource = e.detail.value;
+              if (app.selectedResource) {
+                  if (app.$.theSpheres.isInContext(app.selectedResource)) {
+                      console.log("SelectedResource already in context");
+                      app.canAddSelectedResourceToSpheres = false;
+                      app.reasonCannotAddToSpheres = "Already in spheres context";
+                      app.$.toast.text = app.reasonCannotAddToSpheres;
+                      app.$.toast.show();
+                  } else if (app.$.theSpheres.contextSize() > 4) {
+                      console.log("Context is already full");
+                      app.canAddSelectedResourceToSpheres = false;
+                      app.reasonCannotAddToSpheres = "Spheres context is full";
+                      app.$.toast.text = app.reasonCannotAddToSpheres;
+                      app.$.toast.show();
+                  } else {
+                      console.log("SelectedResource can be added to context");
+                      app.canAddSelectedResourceToSpheres = true;
+                      app.reasonCannotAddToSpheres = "";
+                  }
+                  var path = app.baseUrl + 'resource';
+                  console.log("going to details page for resource via ", path);
+                  page(path);
+              }
+          }
+      }
+      
+      console.debug("Registering onAddResource handler");
+      var onAddResource = function (e) {
+          console.log("Caught addresource event", e);
           console.log(e.detail.resourceToAdd); // true
           app.addResourceToSpheres(e.detail.resourceToAdd);
-          page('/home');
+          page(app.baseUrl);
       };
+
+      var onRequestSemanticSearch = function(e) {
+          console.log("Caught semantic search request event", e);
+          console.log(e.detail.uiEntToSearch); // true
+          app.$.theSearch.searchValue = e.detail.uiEntToSearch.url;
+          page(app.baseUrl + 'search');
+      };
+
+      var onAjaxError = function(e) {
+          app.$.toast.text = "Error communicating with server";
+          app.$.toast.show();
+      }
+
+      var mySpheresElt = Polymer.dom(document).querySelector('my-spheres');
+      mySpheresElt.addEventListener('selected-resource-changed', onSelectedResource);
+      mySpheresElt.addEventListener('ajax-error', onAjaxError);
+      
       var myRecentElt = Polymer.dom(document).querySelector('my-recent');
-      console.debug("onAddRecentResource myRecentElt", myRecentElt);
-      myRecentElt.addEventListener('addresource', onAddRecentResource);
-      console.debug("added onAddRecentResource handler", myRecentElt);
+      console.debug("adding app listeners for  myRecentElt", myRecentElt);
+      myRecentElt.addEventListener('selected-resource-changed', onSelectedResource);
+      
+      var myResourceElt = Polymer.dom(document).querySelector('my-resource');
+      console.debug("adding app listeners for myResourceElt", myResourceElt);
+      myResourceElt.addEventListener('addresource', onAddResource);
+      myResourceElt.addEventListener('request-semantic-search', onRequestSemanticSearch);
+      
       var mySearchElt = Polymer.dom(document).querySelector('my-search');
-      mySearchElt.addEventListener('addresource', onAddRecentResource);
+      console.debug("adding app listeners for mySearchElt", mySearchElt);
+      mySearchElt.addEventListener('selected-resource-changed', onSelectedResource); //
+      mySearchElt.addEventListener('addresource', onAddResource); //for searchString objects
 
   });
 
@@ -99,6 +161,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.addResourceToSpheres = function(resToAdd) {
       app.$.theSpheres.addToSpheres(resToAdd);
-  }
+  };
+
+  app.gotoSearchPage = function() {
+      page(app.baseUrl + "search");
+  };
+
+  app.isSearchString = function(obj) {
+      if (obj && obj['@type'])
+          return obj['@type'] === "http://xlime.eu/vocab/searchString";
+      else return false;
+  };
+    
+  app.refreshCurrent = function() {
+      function hasRefresh(elt) {
+          if (elt) {
+              console.log("typeof", typeof elt['hasRefresh']);
+              if (typeof elt['hasRefresh'] === 'function') return true;
+              return false;
+          } else return false;
+      }
+      console.log("handling refresh for ", app.$.contentPages.selectedItem);
+      console.log("handling refresh for ", app.$.contentPages.selectedItem.firstElementChild);
+      console.log("element has refresh? ", hasRefresh(app.$.contentPages.selectedItem.firstElementChild));      
+      console.log("refreshing ", app.$.contentPages.selectedItem.firstElementChild.refresh());
+  };
+    
+  app.goBack = function() {
+      window.history.back();    
+  };
 
 })(document);

@@ -13,7 +13,9 @@ This code may only be used under the BSD style license.
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-spheres.html">
 <link rel="import" href="../showcase-resource-selector/showcase-resource-selector.html">
+<!-- 
 <link rel="import" href="showcase-resource.html">
+-->
 
 <dom-module id="my-spheres">
   <template>
@@ -60,24 +62,27 @@ This code may only be used under the BSD style license.
          float: left;
      }
 
-     showcase-resource  {
-         display: inline-block;
-         float: left;
-         max-width: 500px;
-         padding-left: 2em;
-     }
-     
     </style>
 
+    <!-- If empty, show dialog explaining you can populate the spheres by searching or browsing recent... 
     <paper-fab id="searchfab" icon="search" title="Search for media items and add results to the spheres context" on-tap="_onSearchElementTap"></paper-fab>
-    <paper-fab id="recentfab" icon="alarm" title="Browse recently published media items and add selected items to the spheres context" on-tap="_onRecentElementTap"></paper-fab>    
+    <paper-fab id="recentfab" icon="alarm" title="Browse recently published media items and add selected items to the spheres context"
+               on-tap="_onRecentElementTap"></paper-fab>
+     -->
     <paper-material id="spheres-card" elevation="1">
-        <iron-ajax id="spheresAjax" url="[[baseXlimeServiceUrl]]/services/spheres" params='{"context": []}' last-response="{{latestSpheres}}"
-               loading="{{_latestSpheresLoading}}"></iron-ajax>
+        <iron-ajax id="spheresAjax"
+                   url="[[baseXlimeServiceUrl]]/services/spheres"
+                   params='{"context": []}'
+                   last-response="{{latestSpheres}}"
+                   on-error='_handleAjaxError'
+                   loading="{{_latestSpheresLoading}}"
+                   auto></iron-ajax>
         <paper-spinner alt="Loading spheres" class="center" active="[[_latestSpheresLoading]]">Loading spheres...</paper-spinner>
-        <xlime-spheres id="spheres" obj="{{latestSpheres}}" selected="{{selectedInSphere}}" on-spheres-resource-removed="_onSpheresResourceRemoved"></xlime-spheres>
-        <showcase-resource base-xlime-service-url="[[baseXlimeServiceUrl]]" resource="{{selectedInSphere}}">
+        <xlime-spheres id="spheres" obj="{{latestSpheres}}" selected="{{selectedResource}}" on-spheres-resource-removed="_onSpheresResourceRemoved"></xlime-spheres>
+        <!-- 
+        <showcase-resource base-xlime-service-url="[[baseXlimeServiceUrl]]" resource="{{selectedResource}}">
         </showcase-resource>
+         -->
     </paper-material>
   </template>
 
@@ -88,12 +93,15 @@ This code may only be used under the BSD style license.
       Polymer({
         is: 'my-spheres',
 
-        properties: {
-          resourceToAdd: {
-            type: Object,
-            value: null,
-              listener: '_handleResourceToAddChange'
-          },
+          properties: {
+            /**
+             * The resource currently selected in the spheres.
+             */
+            selectedResource: {
+                type: Object,
+                notify: true
+            },
+            
           /**
            * Base url used to call an xLiMe frontend-services endpoint. In this element, 
            * this is used for loading the spheres and for displaying additional information 
@@ -103,8 +111,31 @@ This code may only be used under the BSD style license.
             
         },
 
+        _handleAjaxError: function(e, detail) {
+              this.fire("ajax-error", detail);
+        },
+          
+     refresh: function() {
+         var context = [];
+         if (this.latestSpheres && this.latestSpheres.inner) {
+             for (var i = 0; i < this.latestSpheres.inner.length; i++) {
+                 var rec = this.latestSpheres.inner[i].recommended;
+                 if (rec && rec.url) {
+                     context.push(rec.url);
+                 }
+             }
+         }
+         var params = {
+             context: context
+         }
+         console.debug("Calling spheres with context: ", params);
+         this.$.spheresAjax.params = params;
+         this.$.spheresAjax.generateRequest(); //now this happens automatically
+         
+     },
+          
     created: function() {
-        console.log(this.localName + '#' + this.id + ' was created');
+        console.debug(this.localName + '#' + this.id + ' was created');
     },
       
     ready: function() {
@@ -115,7 +146,7 @@ This code may only be used under the BSD style license.
       // This is the point where you should make modifications to the DOM (when
         // necessary), or kick off any processes the element wants to perform.
         //console.log("The jassa attribute ", _jassa);
-        console.log("ready The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
+        console.debug("ready The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
     },
 
     attached: function() {
@@ -125,7 +156,7 @@ This code may only be used under the BSD style license.
       // This is a good place to perform any work related to your element's
       // visual state or active behavior (measuring sizes, beginning animations,
       // loading resources, etc).
-        console.log("attached The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
+        console.debug("attached The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
     },
 
     detached: function() {
@@ -134,7 +165,6 @@ This code may only be used under the BSD style license.
       //
       // Use this to clean up anything you did in `attached`.
     },
-          
         _onAddContextElementTap: function(e, detail) {
            this.$.addContextDialog.open();
         },
@@ -144,38 +174,38 @@ This code may only be used under the BSD style license.
         },
 
         _onRecentElementTap: function(e, detail) {
-              page('/recent');
+            page('/recent');
         },
           
         _onSpheresResourceRemoved: function(e, detail) {
-            var context = [];
-            if (this.latestSpheres && this.latestSpheres.inner) {
-                for (var i = 0; i < this.latestSpheres.inner.length; i++) {
-                    var rec = this.latestSpheres.inner[i].recommended;
-                    if (rec && rec.url) {
-                        context.push(rec.url);
-                    }
-                }
-            }
-            var params = {
-                context: context
-            }
-            console.log("Calling spheres with context: ", params);
-            this.$.spheresAjax.params = params;
-            this.$.spheresAjax.generateRequest();
+              this.refresh();
         },
-          
-        _handleResourceToAddChange: function(e, detail) {
-          console.log("Resource to add changed: ", this.resourceToAdd);
-        },
-          
-        _handleAddContextDialogClosed: function(closingReason) {
-            console.log("Dialog closed with reason", closingReason);
-            if (closingReason.detail && closingReason.detail.confirmed) {
-                console.debug("")
-                this.addToSpheres(this.resourceToAdd);
+        /**
+         * Returns whether a given `resourceObj` is in the context of these spheres
+         */
+        isInContext: function(resourceObj) {
+            console.log("isInContex?", resourceObj);
+            if (this.$.spheres) {
+                var result = this.$.spheres.isInInner(resourceObj);
+                console.log("Is object in inner?", result, resourceObj);
+                return result;
             }
+            return false;
         },
+        /**
+         * Returns the number of resource objects in the context of these spheres
+         */
+        contextSize: function() {
+            if (this.$.spheres) {
+                return this.$.spheres.innerCount();
+            }
+            return 0;
+        },
+        /**
+         * Use this method to add a new resource to the context of these
+         * spheres. This will trigger a request to the server to update
+         * the spheres based on the new context.
+         */
         addToSpheres: function(resToAdd) {
             //   this.spheres.addToInner(resToAdd);
             var context = [];
@@ -191,9 +221,9 @@ This code may only be used under the BSD style license.
             var params = {
                 context: context
             }
-            console.log("Calling spheres with context: ", params);
+            console.debug("Calling spheres with context: ", params);
             this.$.spheresAjax.params = params;
-            this.$.spheresAjax.generateRequest();
+//            this.$.spheresAjax.generateRequest();// now this happens automatically
         }
       });
     })();

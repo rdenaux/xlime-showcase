@@ -27,10 +27,7 @@ This code may only be used under the BSD style license.
 
     </style>
 
-    <h2 class="page-title">Search</h2>
-    <p>Search for xLiMe media items and annotations, and add them to your spheres context</p>
-    <showcase-search base-xlime-service-url='[[baseXlimeServiceUrl]]' selected-resource="{{_searchResourceSelected}}"></showcase-search>
-    <paper-fab disabled="[[!_hasSelectedResource]]" icon="add" title="add selected item to your spheres context to browse cross-modally and cross-lingually" on-tap="_onAddContextElementTap"></paper-fab>
+    <showcase-search id="showcaseSearch" search-value="{{searchValue}}" base-xlime-service-url='[[baseXlimeServiceUrl]]' selected-resource="{{selectedResource}}" on-addsearch="_onAddSearchObject"></showcase-search>
     
   </template>
 
@@ -42,49 +39,58 @@ This code may only be used under the BSD style license.
         is: 'my-search',
 
         properties: {
+            selectedResource: {
+                type: Object,
+                notify: true
+            },
+            /**
+             * The string value currently used for searching media items and annotations.
+             */
+          searchValue: String,
+            
           /**
            * Base url for an xLiMe frontend-service endpoint. Used to perform the search.
            */
           baseXlimeServiceUrl: String,
-          _searchResourceSelected: {
-              type: Object,
-              notify: true,
-              observer: '_handleSearchResourceChanged'
-          },
           _hasSelectedResource: {
               type: Boolean,
-              computed: '_isValid(searchResourceSelected)'
+              computed: '_isValid(selectedResource)'
           }
         },
-    ready: function() {
-      // `ready` is called after all elements have been configured, but
-      // propagates bottom-up. This element's children are ready, but parents
-      // are not.
-      //
-      // This is the point where you should make modifications to the DOM (when
-        // necessary), or kick off any processes the element wants to perform.
-        //console.log("The jassa attribute ", _jassa);
-        console.log("ready The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
+
+        refresh: function(obj) {
+          this.$.showcaseSearch.refresh();    
+        },
+          
+        ready: function() {
+            // `ready` is called after all elements have been configured, but
+            // propagates bottom-up. This element's children are ready, but parents
+            // are not.
+            //
+            // This is the point where you should make modifications to the DOM (when
+            // necessary), or kick off any processes the element wants to perform.
+            //console.log("The jassa attribute ", _jassa);
+            console.log("ready The baseXlimeServiceUrl attribute ", this.baseXlimeServiceUrl);
+        },
+    _isValid: function(obj) {
+        if (obj) {
+            console.debug("truthy selected foundResouce: ", obj);
+            return true;   
+        }
+        else {
+            console.debug("falsey selected foundResouce: ", obj);
+            return false;
+        }
     },
-        _isValid: function(obj) {
-            if (obj) {
-                console.debug("truthy selected searchResouce: ", obj);
-                return true;   
-            }
-            else {
-                console.debug("falsey selected searchResouce: ", obj);
-                return false;
-            }
-        },
-        _handleSearchResourceChanged: function(e, detail) {
-            console.log("Selected search resource changed ", detail);
-            this.selectedResource = this._searchResourceSelected;
-        },
-        _onAddContextElementTap: function(e, detail) {
-            var newDetail = {resourceToAdd: this.selectedResource};
+    _onAddSearchObject: function(e, detail) {
+        if (detail && detail.searchToAdd) {
+            var newDetail = {resourceToAdd: detail.searchToAdd};
             console.debug("Firing addresource event with detail", newDetail);
             this.fire('addresource', newDetail);
+        } else {
+            colsole.warning("Invalid onAddSearch event, no searchToAdd detail.", e);
         }
+    }
           
       });
     })();

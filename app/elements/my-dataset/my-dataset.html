@@ -6,6 +6,7 @@ This code may only be used under the BSD style license.
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-dataset-summary.html">
 
@@ -21,15 +22,21 @@ This code may only be used under the BSD style license.
         @apply(--paper-font-body2);
       }
 
+     paper-fab {
+         z-index: 20;
+         color: black;
+     }
+
     </style>
 
-    <h2 class="page-title">xLiMe Live Dataset</h2>
-    <p>This is the dataset section</p>
-    
-    <iron-ajax id="datasetSumAjax" url="[[baseXlimeServiceUrl]]/services/spheres" params='{"ds": ["mongo"]}' last-response="{{latestDatasetSumObj}}"
-               loading="{{_latestDatasetSumLoading}}"></iron-ajax>
+    <iron-ajax id="datasetSumAjax" url="[[baseXlimeServiceUrl]]/services/dataset-summary" params='{"ds": ["mongo"]}' last-response="{{latestDatasetSumObj}}"
+               loading="{{_latestDatasetSumLoading}}" auto></iron-ajax>
     <paper-spinner alt="Loading dataset information" class="center" active="[[_latestDatasetSumLoading]]">Loading dataset information...</paper-spinner>
-    <xlime-dataset-summary summary-obj='[[latestDatasetSumObj]]'></xlime-dataset-summary>
+<!-- 
+    <paper-fab id="update" icon="refresh" title="Refresh summary" on-tap="_onRefresh"></paper-fab>
+     -->
+    <xlime-dataset-summary hidden$='[[!_isValidSumObj]]' summary-obj='[[latestDatasetSumObj]]'></xlime-dataset-summary>
+    
   </template>
 
   <script>
@@ -43,8 +50,19 @@ This code may only be used under the BSD style license.
             /**
              * Base url for an xLiMe frontend-services endpoint. Used to retrieve the dataset summary information.
              */
-            baseXlimeServiceUrl: String
-        }
+            baseXlimeServiceUrl: String,
+            _isValidSumObj: {
+                type: Boolean,
+                computed: "_isValid(latestDatasetSumObj)"
+            }
+        },
+        _isValid: function(obj) {
+            if (obj) return true;
+            else return false;
+        },
+          _onRefresh: function(e, detail) {
+              this.$.datasetSumAjax.generateRequest();
+          }
           
       });
     })();

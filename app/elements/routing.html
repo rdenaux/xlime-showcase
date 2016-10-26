@@ -39,10 +39,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     page('/', function() {
       app.route = 'home';
+      app.sectionName = "xLiMe Showcase";
+      app.sectionBlurb = "Cross-modal & cross-lingual media browsing";
     });
 
     page(app.baseUrl, function() {
-      app.route = 'home';
+        app.route = 'home';
+        app.sectionName = "xLiMe Showcase";
+        app.sectionBlurb = "Cross-modal & cross-lingual media browsing";
     });
 
     page('/users', function() {
@@ -55,23 +59,46 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/search', function() {
-      app.route = 'search';
+        app.route = 'search';
+        app.sectionName = "Search";
+        app.sectionBlurb = "Find xLiMe media items and annotations";
     });
       
     page('/recent', function() {
-      app.route = 'recent';
+        app.route = 'recent';
+        app.sectionName = "Recently in the media";
+        app.sectionBlurb = "Recent news, tv programs or social media posts";
     });
 
     page('/dataset', function() {
-      app.route = 'dataset';
+        app.route = 'dataset';
+        app.sectionName = "Dataset";
+        app.sectionBlurb = "General information about the data in this app";        
     });
       
     page('/contact', function() {
-      app.route = 'contact';
+        app.route = 'contact';
+        app.sectionName = "Contact";
+        app.sectionBlurb = "how to contact us";
     });
 
     page('/about', function() {
-      app.route = 'about';
+        app.route = 'about';
+        app.sectionName = "About";
+        app.sectionBlurb = "xLiMe Showcase";
+    });
+
+    page('/resource', function(data) {
+        app.route = 'resource';
+        app.sectionName = "Details";
+        app.sectionBlurb = "Details about xLiMe resource";
+//        app.params = data.params;
+    });
+
+    page('/backend', function(data) {
+        app.route = 'backend';
+        app.sectionName = "Backend";
+        app.sectionBlurb = "Configure the backend to use";
     });
       
     // 404

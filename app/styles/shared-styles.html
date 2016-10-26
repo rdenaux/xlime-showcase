@@ -4,20 +4,66 @@
 <!-- shared styles for all elements and index.html -->
 <dom-module id="shared-styles">
   <template>
-    <style>
+      <style>
+       :root {
+           --xlime-primary-background-color: #65842E;
+           --xlime-highlight-color: #EEFF41;
+           /*
+           --paper-card-content: {
+               background-color: #FFFFFF;
+           }*/
+           --paper-card-header-text: {
+               background-color: #2E7D32;
+               color: #FFFFFF;
+           }
+       }
+       
       .page-title {
         @apply(--paper-font-display2);
       }
 
-      paper-menu a > *, paper-menu paper-item > *, paper-menu paper-icon-item > * {
+     paper-menu a > *, paper-menu paper-item > *, paper-menu paper-icon-item > * {
         pointer-events: none;
       }
 
+
+     paper-fab {
+         color: #2E7D32; //
+     }
+     
+     paper-material {
+         border-radius: 2px;
+         height: 100%;
+         padding: 16px 0 16px 0;
+         width: calc(98.66% - 16px);
+         margin: 16px auto;
+         background: white;
+     }
+
+     /* mobiles */
       @media (max-width: 600px) {
         .page-title {
           font-size: 24px!important;
         }
+
+          paper-material {
+              --menu-container-display: none;
+              width: calc(97.33% - 32px);
+              padding-left: 16px;
+              padding-right: 16px;
+          }
+          
       }
+
+     /* Tablet+ */
+     @media (min-width: 601px) {
+         paper-material {
+             width: calc(98% - 46px);
+             margin-bottom: 32px;
+             padding-left: 30px;
+             padding-right: 30px;
+         }
+     }     
     </style>
   </template>
 </dom-module>

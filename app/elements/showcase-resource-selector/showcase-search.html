@@ -10,17 +10,15 @@ This code may only be used under the BSD style license.
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../../bower_components/paper-badge/paper-badge.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
-<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-item.html">
-<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-card.html">
 <link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-kb-entity-item.html">
-<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-kb-entity-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-resource-item.html">
 <link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-object-inspector-behavior.html">
 
 <dom-module id="showcase-search">
@@ -31,14 +29,13 @@ This code may only be used under the BSD style license.
       }
 
      section {
-         width: 400px;
-         max-height: 350px;
-         max-width: 500px;
-         height: 350px;               
-         @apply(--layout-vertical);
+         max-height: 600px;
+         height: 400px; 
+         max-width: 700px;
      }
-     section paper-dialog-scrollable {
-         @apply(--layout-flex);
+
+     paper-input {
+         max-width: 700px;
      }
      
       span,
@@ -49,25 +46,45 @@ This code may only be used under the BSD style license.
      paper-spinner {
          position: absolute;
      }
-     
     </style>
 
-    <paper-input label="text to search" value="{{_searchValue}}"></paper-input>
-    <iron-ajax url="[[baseXlimeServiceUrl]]/services/search" params='[[_searchParams(_searchValue)]]' last-response="{{latestSearchResults}}"
+    <div>
+        <paper-input label="text to search" value="{{searchValue}}">
+            <div hidden$="[[_hasEmptySearchValue]]" suffix>
+                <paper-fab mini disabled="[[_hasEmptySearchValue]]" icon="add" title="add this keyword search to your spheres context to browse cross-modally and cross-lingually" on-tap="_onAddSearchObjectTap"></paper-fab>
+            </div>
+        </paper-input>
+    </div>
+    
+    <iron-ajax id="searchAjax" url="[[baseXlimeServiceUrl]]/services/search" params='[[_searchParams(searchValue)]]' last-response="{{latestSearchResults}}"
                  loading="{{isSearching}}" debounce-duration="500" auto></iron-ajax>
-    <div class="layout horizontal" style="display: flex;">
+    <div>
         <section id="resultPreview">
             <paper-tabs selected="{{selectedTab}}">
-                <paper-tab>Matched media</paper-tab>
-                <paper-tab>Did you mean</paper-tab>
+                <paper-tab>
+                    <span id="miTab">Media</span>
+                    <paper-badge for="miTab" label="[[_mediaItemsFound]]"></paper-badge>
+                </paper-tab>
+                <paper-tab>
+                    <span id="annTab">Annotations</span>
+                    <paper-badge for="annTab" label="[[_annotationsFound]]"></paper-badge>
+                </paper-tab>
+                <paper-tab>
+                    <span id="dymTab">Did you mean</span>
+                    <paper-badge for="dymTab" label="[[_dymFound]]"></paper-badge>
+                </paper-tab>
             </paper-tabs>
 
             <paper-spinner alt="Searching " class="center" active="[[isSearching]]">Searching ...</paper-spinner>
-            <paper-dialog-scrollable id="mediaItemsScrollable" >
             <iron-pages selected="[[selectedTab]]">
                 <paper-listbox id="mediaItems" on-iron-select="_handleResourceSelect" on-iron-deselect="_handleResourceDeselect">
                         <template is="dom-repeat" items="{{latestSearchResults.mediaItems}}">
                             <xlime-media-item-item item="{{item}}"></xlime-media-item-item>
+                        </template>
+                </paper-listbox>
+                <paper-listbox id="annotations" on-iron-select="_handleResourceSelect" on-iron-deselect="_handleResourceDeselect">
+                        <template is="dom-repeat" items="{{latestSearchResults.annotations}}">
+                            <xlime-resource-item resource="{{item}}" date-mode="timeAgo"></xlime-resource-item>
                         </template>
                 </paper-listbox>
                 <paper-listbox id="kbEntities" on-iron-select="_handleResourceSelect" on-iron-deselect="_handleResourceDeselect">
@@ -76,20 +93,7 @@ This code may only be used under the BSD style license.
                         </template>
                 </paper-listbox>
             </iron-pages>
-            </paper-dialog-scrollable>
         </section>
-        <section>
-            <h4>Selected information to add to context:</h4>
-            <paper-card heading="{{_searchValue}}" on-tap="_selectSearchValue">
-                <div>Search String to be added to context</div>
-            </paper-card>
-            <xlime-media-item-card hidden$="[[!isMediaItem(selectedResource)]]" id="mediaItemCard" item-obj="[[selectedResource]]">
-            </xlime-media-item-card>
-            <xlime-kb-entity-card hidden$="[[!isKBEntity(selectedResource)]]" entity="[[selectedEntity]]"></xlime-kb-entity-card>
-        </section>
-        <!-- 
-        <div>selected res [[selectedResource]], isMediaItem: [[isMediaItem(selectedResource)]], isKBEntity: [[isKBEntity(selectedResource)]]</div>
-         -->
     </div>
     
   </template>
@@ -115,19 +119,61 @@ This code may only be used under the BSD style license.
               type: Number,
               value: 0
           },
-          _searchValue: {
+          searchValue: {
               type: String,
-              notify: true,
-              observer: "_onSearchValueChange"
+              notify: true
           },
           /**
            * Base url for an xLiMe frontend-services endpoint. Used to perform the search.
            * Examples: `http://localhost:8080` or `http://expertsystemlab.com:8080/frontend-services`
            */
-          baseXlimeServiceUrl: String 
+            baseXlimeServiceUrl: String,
+            _hasEmptySearchValue: {
+                type: Boolean,
+                computed: '_isEmptySearchString(_searchStringObj)'
+            },
+            _mediaItemsFound: {
+                type: Number,
+                computed: '_countMediaItems(latestSearchResults)'
+            },
+            _annotationsFound: {
+                type: Number,
+                computed: '_countAnnotations(latestSearchResults)'
+            },
+            _dymFound: {
+                type: Number,
+                computed: '_countEntities(latestSearchResults)'
+            },
+            _searchStringObj: {
+                type: Object,
+                computed: '_asSearchStringObj(searchValue)'
+            }
             
         },
 
+        refresh: function(obj) {
+          this.$.searchAjax.generateRequest();
+        },
+        _countMediaItems: function(sResults) {
+            if (sResults && sResults.mediaItems) {
+                return sResults.mediaItems.length;
+            }  else return 0;
+        },
+        _countAnnotations: function(sResults) {
+            if (sResults && sResults.annotations) {
+                return sResults.annotations.length;
+            }  else return 0;
+        },
+        _countEntities: function(sResults) {
+            if (sResults && sResults.entities) {
+                return sResults.entities.length;
+            }  else return 0;
+        },
+          
+        _isEmptySearchString: function(searchStringObj) {
+            if (searchStringObj) return false;
+            else return true;
+        },
         _searchParams: function(query) {
             var params = {};
             if (query) {
@@ -135,40 +181,40 @@ This code may only be used under the BSD style license.
             }
             return params;
         },
-        _selectSearchValue: function(e, detail) {
-            this.selectedResource = this._searchStringObj();
-        },
-        _searchStringObj: function() {
-            if (this._searchValue) {
+        _asSearchStringObj: function(str) {
+            if (str) {
                 var obj = {};
-                obj.value = this._searchValue;
+                obj.value = str;
                 obj['@type'] = "http://xlime.eu/vocab/searchString";
-                obj.url = "http://xlime.eu/vocab/search?q=" + encodeURI(this._searchValue);
+                obj.url = "http://xlime.eu/vocab/search?q=" + encodeURI(str);
                 return obj;
             } else return null;
         },
-        _onSearchValueChange: function(old, newValue) {
-            console.log("handling change of _searchValue", this._searchValue);
-            this.selectedResource = this._searchStringObj();
-        },
         _handleResourceDeselect: function(e, detail) {
-            console.log("handlign resource deselection: ", e);
+            console.debug("handlign resource deselection: ", e);
             this.selectedResource = null;
         },
         _handleResourceSelect: function(e, detail) {
-            console.log("handlign resource selection: ", e);
-            /*
-            console.log("handlign media-item selection: ", detail);
-            console.log("mediaItemsSection: ", this.$.mediaItemsSection);
-            console.log("mediaItemsScrollable: ", this.$.mediaItemsScrollable);
-            console.log("mediaItemsScrollable.dialogElement: ", this.$.mediaItemsScrollable.dialogElement);
-            */
+            console.debug("handling resource selection: ", e);
             // bind to #mediaItemCard.itemObj to show details
             var elt = detail.item;
-            if (elt.item) this.selectedResource = elt.item;
-            else if (elt.entity) this.selectedResource = elt.entity;
-            console.log("selected ", this.selectedResource);
-        }
+            if (elt.item) {
+                this.selectedResource = elt.item;
+            } else if (elt.resource) {
+                this.selectedResource = elt.resource;
+            } else if (elt.entity) {
+                this.selectedResource = elt.entity;
+            } else {
+                console.warning("Unexpected detail item", detail);
+                this.selectedResource = null;
+            }
+            console.debug("selected ", this.selectedResource);
+        },
+          _onAddSearchObjectTap: function(e, detail) {
+              var newDetail = {searchToAdd: this._searchStringObj};
+              console.debug("Firing addsearch event with detail", newDetail);
+              this.fire('addsearch', newDetail);
+          }
           
 
       });

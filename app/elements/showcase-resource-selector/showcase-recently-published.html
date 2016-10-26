@@ -7,62 +7,79 @@ This code may only be used under the BSD style license.
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../../bower_components/paper-badge/paper-badge.html">
 <link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
-<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-item.html">
 <link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-resource-item.html">
 
 <dom-module id="showcase-recently-published">
   <template>
-    <style include="shared-styles" include="iron-flex">
-/*      :host {
+      <style include="shared-styles">
+
+      :host {
         display: block;
       }
-*/
+
      section {
-         width: 400px;
-         max-height: 350px;
-         max-width: 500px;
-         height: 350px;               
-         @apply(--layout-vertical);
-     }
-     section paper-dialog-scrollable {
-         @apply(--layout-flex);
+         max-height: 60px;
+         max-width: 700px;
+         height: 400px;               
      }
 
-     #mediaItemCard {
-         width: 400px;
+     section paper-listbox {
+
      }
+
      span,
      input {
          @apply(--paper-font-body2);
      }
 
+     xlime-resource-item {
+         max-width: 700px;
+     }
      paper-spinner {
          position: absolute;
      }
     </style>
 
-    <iron-ajax url="[[baseXlimeServiceUrl]]/services/latestMediaItems" params='{"minutes": 10000}' last-response="{{latestMediaItems}}"
-                 loading="{{latestMediaItemsLoading}}" auto on-request='_handleOnRequest'></iron-ajax>
-    <div class="layout horizontal" style="display: flex;">
+    <iron-ajax id="mediaItemsAjax" url="[[baseXlimeServiceUrl]]/services/latestMediaItems" params='{"minutes": 20}' last-response="{{latestMediaItems}}"
+               loading="{{latestMediaItemsLoading}}" auto on-request='_handleOnRequest'></iron-ajax>
+    <iron-ajax id="annotationsAjax" url="[[baseXlimeServiceUrl]]/services/latestAnnotations" params='{"minutes": 10}' last-response="{{latestAnnots}}"
+               loading="{{latestAnnotsLoading}}" auto on-request='_handleOnRequest'></iron-ajax>
+
+    <div>
         <section id="mediaItemsSection">
+            <paper-tabs selected="{{selectedTab}}">
+                <paper-tab>
+                    <span id="miTab">Recently published</span>
+                    <paper-badge for="miTab" label="[[_mediaItemsFound]]"></paper-badge>
+                </paper-tab>
+                <paper-tab>
+                    <span id="annTab">Recently annotated</span>
+                    <paper-badge for="annTab" label="[[_annotationsFound]]"></paper-badge>
+                </paper-tab>
+            </paper-tabs>
             <paper-spinner alt="Loading media items" class="center" active="[[latestMediaItemsLoading]]">Loading recently published items...</paper-spinner>
-            <paper-dialog-scrollable id="mediaItemsScrollable" >
+            <paper-spinner alt="Loading annotations" class="center" active="[[latestAnnotsLoading]]">Loading recent annotations...</paper-spinner>
+            <iron-pages selected="[[selectedTab]]">
                 <paper-listbox id="mediaItems" on-iron-select="_handleMediaItemSelect" on-iron-deselect="_handleMediaItemDeselect">
                     <template is="dom-repeat" items="{{latestMediaItems.mediaItems}}">
-                        <xlime-media-item-item item="{{item}}"></xlime-media-item-item>
+                        <xlime-media-item-item item="{{item}}" date-mode="timeAgo"></xlime-media-item-item>
                     </template>
                 </paper-listbox>
-            </paper-dialog-scrollable>
-        </section>
-        <section>
-            <h4>Selected media-item:</h4>
-            <xlime-media-item-card hiddent="[[_isValid(selectedResource)]]" id="mediaItemCard" item-obj="[[selectedResource]]">
-            </xlime-media-item-card>
+                <paper-listbox id="annots" on-iron-select="_handleAnnotSelect" on-iron-deselect="_handleAnnotDeselect">
+                    <template is="dom-repeat" items="{{latestAnnots.annotations}}">
+                        <xlime-resource-item resource="{{item}}" date-mode="timeAgo" log-level="INFO">test</xlime-resource-item>
+                    </template>
+                </paper-listbox>
+            </iron-pages>
         </section>
     </div>
     
@@ -83,10 +100,37 @@ This code may only be used under the BSD style license.
             type: Object,
             notify: true
           },
+          selectedTab: {
+              type: Number,
+              value: 0
+          },
           /**
            * Base Url for an xLiMe frontend-services endpoint. Used to retrieve the recently published/processed media items.
            */
-          baseXlimeServiceUrl: String
+            baseXlimeServiceUrl: String,
+            _mediaItemsFound: {
+                type: Number,
+                computed: '_countMediaItems(latestMediaItems)'
+            },
+            _annotationsFound: {
+                type: Number,
+                computed: '_countAnnotations(latestAnnots)'
+            }
+            
+        },
+        refresh: function(obj) {
+            this.$.mediaItemsAjax.generateRequest();
+            this.$.annotationsAjax.generateRequest();
+        },
+        _countMediaItems: function(recentMediaItems) {
+            if (recentMediaItems && recentMediaItems.mediaItems) {
+                return recentMediaItems.mediaItems.length;
+            }  else return 0;
+        },
+        _countAnnotations: function(recentAnns) {
+            if (recentAnns && recentAnns.annotations) {
+                return recentAnns.annotations.length;
+            }  else return 0;
         },
         _isValid: function(obj) {
             if (obj) return true;
@@ -96,11 +140,15 @@ This code may only be used under the BSD style license.
             this.selectedResource = null;
         },
         _handleMediaItemDeselect: function(e, detail) {
-            console.log("handlign media-item deselection: ", e);
+            console.debug("handlign media-item deselection: ", e);
+            this.selectedResource = null;
+        },
+        _handleAnnotDeselect: function(e, detail) {
+            console.debug("handling annotation deselection: ", e);
             this.selectedResource = null;
         },
         _handleMediaItemSelect: function(e, detail) {
-            console.log("handlign media-item selection: ", e);
+            console.debug("handlign media-item selection: ", e);
             /*
             console.log("handlign media-item selection: ", detail);
             console.log("mediaItemsSection: ", this.$.mediaItemsSection);
@@ -110,7 +158,20 @@ This code may only be used under the BSD style license.
             // bind to #mediaItemCard.itemObj to show details
             this.selectedResource = detail.item.item;
             console.log("selected ", this.selectedResource);
+        },
+        _handleAnnotSelect: function(e, detail) {
+            console.log("handlign annotation selection: ", e);
+            /*
+            console.log("handlign media-item selection: ", detail);
+            console.log("mediaItemsSection: ", this.$.mediaItemsSection);
+            console.log("mediaItemsScrollable: ", this.$.mediaItemsScrollable);
+            console.log("mediaItemsScrollable.dialogElement: ", this.$.mediaItemsScrollable.dialogElement);
+            */
+            // bind to #mediaItemCard.itemObj to show details
+            this.selectedResource = detail.item.resource;
+            console.log("selected ", this.selectedResource);
         }
+          
 
       });
     })();

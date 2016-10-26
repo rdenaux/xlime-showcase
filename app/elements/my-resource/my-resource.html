@@ -1,0 +1,213 @@
+<!--
+@license
+Copyright (c) 2016 Expert System. All rights reserved.
+This code may only be used under the BSD style license.
+-->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="../../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../../bower_components/paper-button/paper-buton.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/paper-tooltip/paper-tooltip.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-media-item-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-asr-annotation-card.html">
+<!-- 
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-ocr-annotation-card.html">
+ -->
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-subtitle-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-spheres-resource.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-kb-entity-card.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-log-behavior.html">
+<link rel="import" href="../../bower_components/xlime-polymer-elements/xlime-object-inspector-behavior.html">
+
+<dom-module id="my-resource">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+
+      span,
+      input {
+        @apply(--paper-font-body2);
+      }
+
+     paper-card {
+         min-width: 250px;
+     }
+     paper-fab {
+    #     display: inline;
+         z-index: 20;
+         color: black;
+     }
+
+    </style>
+
+    <iron-ajax id="ajaxEntSumma" url="[[baseXlimeServiceUrl]]/services/entities" last-response="{{entitySummas}}"
+               loading="{{loadingEntitySumma}}"></iron-ajax>
+
+    <paper-button id="addButton" raised
+                  disabled$="[[!canAddToSpheres]]"
+                  on-tap="_onAddContextElementTap">
+        <iron-icon icon="add"></iron-icon>
+        Add to spheres
+    </paper-button>
+    <paper-tooltip for="addButton">[[_addToSpheresTitle()]]</paper-tooltip>
+    
+    <template is="dom-if" if="{{_containsEntity(obj)}}">
+        <paper-button id="semSearch" raised
+                  on-tap="_onSemanticSearchTap">
+            <iron-icon icon="search"></iron-icon>
+            Search using entity
+        </paper-button>
+    </template>
+        
+    <!-- 
+    <paper-fab mini hidden$="[[!_isValid(obj)]]" disabled$="[[!canAddToSpheres]]" icon="add" title="[[_addToSpheresTitle()]]" on-tap="_onAddContextElementTap"></paper-fab>
+     -->
+    
+    <template is="dom-if" if="{{!_isValid(obj)}}">
+        <paper-item>Invalid or empty item</paper-item>
+    </template>
+    <template is="dom-if" if="{{isMediaItem(obj)}}">
+        <xlime-media-item-card item-obj="{{obj}}" date-mode="[[dateMode]]"></xlime-media-item-card>
+    </template>
+    <template is="dom-if" if="{{isASRAnnotation(obj)}}">
+        <xlime-asr-annotation-card obj="{{obj}}" date-mode="[[dateMode]]"></xlime-asr-annotation-card>
+    </template>
+    <!-- 
+    <template is="dom-if" if="{{isOCRAnnotation(obj)}}">
+    <xlime-ocr-annotation-card obj="{{obj}}" date-mode="[[dateMode]]"></xlime-ocr-annotation-card>
+    </template>
+    -->
+    <template is="dom-if" if="{{isSubtitleSegment(obj)}}">
+        <xlime-subtitle-card obj="{{obj}}" date-mode="[[dateMode]]"></xlime-subtitle-card>
+    </template>
+    <template is="dom-if" if="{{isEntityAnnotation(obj)}}">
+        <paper-spinner alt="Loading KB entity summary" class="center" active="[[loadingEntitySumma]]">Loading KB Entity summary...</paper-spinner>
+        <xlime-kb-entity-card id="entAnnKbEntCard" entity="{{_entitySum}}" date-mode="[[dateMode]]"></xlime-kb-entity-card>
+    </template>
+    <template is="dom-if" if="{{isKBEntity(obj)}}">
+        <paper-spinner alt="Loading KB entity summary" class="center" active="[[loadingEntitySumma]]">Loading KB Entity summary...</paper-spinner>
+        <xlime-kb-entity-card id="kbEntCard" entity="[[_entitySum]]">
+        </xlime-kb-entity-card>
+    </template>    
+    
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'my-resource',
+        behaviors: [XLiMe.LogBehavior, XLiMe.ObjectInspectorBehavior],
+
+          
+        properties: {
+            obj: {
+                type: Object,
+                observer: '_handleObjectChanged'
+            },
+            canAddToSpheres: Boolean,
+            reasonCannotAddToSpheres: String,
+            /**
+             * Base url for an xLiMe frontend-services endpoint. Used to retrieve further information about the  summary information.
+             */
+            baseXlimeServiceUrl: String,
+            _isValidSumObj: {
+                type: Boolean,
+                computed: "_isValid(obj)"
+            },
+            _entitySum: {
+                type: Object,
+                computed: "_calcEntitySum(loadingEntitySumma, obj, entitySummas)"
+            }
+      },
+        _addToSpheresTitle: function() {
+            if (this.canAddToSpheres) return "add this " + this.resourceTypeLabel(this.obj) + " to your spheres context to browse cross-modally and cross-lingually";
+            if (this.reasonCannotAddToSpheres) return this.reasonCannotAddToSpheres;
+            else return "Cannot add " + this.resourceTypeLabel(this.obj) + " to the spheres";
+        },
+        _isValid: function(obj) {
+            if (obj) return true;
+            else return false;
+        },
+        _onAddContextElementTap: function(e, detail) {
+              
+            var newDetail = {resourceToAdd: this.obj};
+            console.debug("Firing addresource event with detail", newDetail);
+            this.fire('addresource', newDetail);
+        },
+          _onSemanticSearchTap: function(e, detail) {
+              var uiEnt = this._extractUIEnt(this.obj);
+              if (uiEnt) {
+                  var newDetail = {uiEntToSearch: uiEnt};
+                  console.debug("Firing request-semantic-search event with detail", newDetail);
+                  this.fire('request-semantic-search', newDetail);
+              } else {
+                  log.warning("Cannot invoke semantic search on ", this.obj);
+              }
+          },
+        _containsEntity: function(obj) {
+          return (this.isEntityAnnotation(obj) || this.isKBEntity(obj));
+        },
+        _calcEntitySum(loadingSumma, newObj, newEntSummas) {
+            if (loadingSumma) return null;
+            if (this.isEntityAnnotation(newObj) ||
+                this.isKBEntity(newObj)) {
+                if (newEntSummas && newEntSummas.length > 0) {
+                    console.debug("new entitySum from newEntSummas");
+                    return newEntSummas[0];
+                } else {
+                    console.debug("no newEntSummas, so creating a mock entsumma from object");
+                    return this._uiEntAsEntSumma(this._extractUIEnt(newObj));
+                }
+            } else {
+                console.debug("Unsupported object for calculating entitySum", newObj);
+                return null;
+            }
+        },
+        _extractUIEnt: function(anObj) {
+            if (this.isEntityAnnotation(anObj)) {
+                return anObj.entity;
+            }
+            if (this.isKBEntity(anObj)) {
+                return anObj;
+            }
+            return null;
+        },
+              
+        _uiEntAsEntSumma: function(uiEnt) {
+            return {
+                entity: uiEnt,
+                type: "http://example.com/entitySummary",
+                statements: [],
+                topK: 0
+            }    
+        },
+        _handleObjectChanged: function(newValue, oldValue) {
+            console.log("Selected Resource to display changed to ", newValue);
+            if (this.isEntityAnnotation(this.obj)) {
+                var ajax = this.$.ajaxEntSumma;
+                var params = {};
+                params.url = this.obj.entity.url;
+                ajax.params = params;
+                ajax.generateRequest();
+            }
+            if (this.isKBEntity(this.obj)) {
+                var ajax = this.$.ajaxEntSumma;
+                var params = {};
+                params.url = this.obj.url;
+                ajax.params = params;
+                ajax.generateRequest();
+            }
+        },
+          
+          
+      });
+    })();
+  </script>
+</dom-module>

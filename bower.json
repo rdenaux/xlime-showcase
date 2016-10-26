@@ -1,6 +1,6 @@
 {
   "name": "xlime-showcase",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "iron-elements": "PolymerElements/iron-elements#^1.0.0",

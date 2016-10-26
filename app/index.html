@@ -60,13 +60,15 @@ This code may only be used under the BSD style license.
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
-    <paper-drawer-panel id="paperDrawerPanel">
+    <paper-drawer-panel id="paperDrawerPanel" drawer-width="200px">
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
 
         <!-- Drawer Toolbar -->
         <paper-toolbar id="drawerToolbar">
-          <span class="menu-name">Menu</span>
+            <span class="menu-name">
+                <iron-image src="images/xlime/xLiMe_Showcase_logo.png"></iron-image>
+            </span>
         </paper-toolbar>
 
         <!-- Drawer Content -->
@@ -104,9 +106,22 @@ This code may only be used under the BSD style license.
           </a>
 
           <a data-route="about" href="{{baseUrl}}about">
-              <iron-icon icon="xlime:icon"></iron-icon>
+              <iron-icon icon="xlime-svg:logo"></iron-icon>
               <span>About</span>
           </a>
+          
+          <a data-route="about" href="{{baseUrl}}backend">
+              <iron-icon icon="settings"></iron-icon>
+              <span>Config</span>
+          </a>
+
+          <a data-route="about" href="{{baseUrl}}resource">
+              <!--
+              <iron-icon icon="settings"></iron-icon>
+              <span>Details</span>
+               -->
+          </a>
+          
         </paper-menu>
       </paper-scroll-header-panel>
 
@@ -119,26 +134,34 @@ This code may only be used under the BSD style license.
           <span class="space"></span>
 
           <!-- Toolbar icons -->
-          <paper-icon-button icon="refresh"></paper-icon-button>
-          <paper-icon-button icon="search"></paper-icon-button>
+          <paper-icon-button icon="arrow-back" on-tap='goBack' paper-drawer-toggle></paper-icon-button>
+          <paper-icon-button icon="refresh" on-tap='refreshCurrent'></paper-icon-button>
+          <paper-icon-button icon="search" on-tap='gotoSearchPage'></paper-icon-button>
 
-          <!-- Application name -->
+          <!-- Section name -->
           <div class="middle middle-container">
-            <div class="app-name">xLiMe Showcase</div>
+            <div class="app-name">{{sectionName}}</div>
           </div>
 
-          <!-- Application sub title -->
+          <!-- Section sub title -->
           <div class="bottom bottom-container">
-            <div class="bottom-title">Cross-modal & cross-lingual media browsing</div>
+            <div class="bottom-title">{{sectionBlurb}}</div>
           </div>
         </paper-toolbar>
 
         <!-- Main Content -->
         <div class="content">
-          <iron-pages attr-for-selected="data-route" selected="{{route}}">
-            <section data-route="home">
+          <iron-pages id="contentPages" attr-for-selected="data-route" selected="{{route}}">
+              <section data-route="resource">
+                  <my-resource obj="[[selectedResource]]"
+                               can-add-to-spheres="[[canAddSelectedResourceToSpheres]]"
+                               reason-cannot-add-to-spheres="[[reasonCannotAddToSpheres]]"
+                               base-xlime-service-url='[[baseXlimeServiceUrl]]'></my-resource>
+              </section>
+              
+              <section data-route="home">
                   <my-spheres id="theSpheres" base-xlime-service-url='[[baseXlimeServiceUrl]]'></my-spheres>
-            </section>
+              </section>
 
             <!-- 
             <section data-route="users">
@@ -161,31 +184,27 @@ This code may only be used under the BSD style license.
             -->
 
             <section data-route="search">
-                <paper-material elevation="1">
-                    <my-search base-xlime-service-url='[[baseXlimeServiceUrl]]'</my-search>
-                </paper-material>
+                <my-search id="theSearch" base-xlime-service-url='[[baseXlimeServiceUrl]]'></my-search>
             </section>
 
             <section data-route="recent">
-                <paper-material elevation="1">
-                    <my-recent base-xlime-service-url="[[baseXlimeServiceUrl]]"> </my-recent>
-                </paper-material>
+                <my-recent base-xlime-service-url="[[baseXlimeServiceUrl]]"> </my-recent>
             </section>
 
             <section data-route="dataset">
-                <paper-material elevation="1">
-                    <my-dataset base-xlime-service-url='[[baseXlimeServiceUrl]]'></my-dataset>
-                </paper-material>
+                <my-dataset base-xlime-service-url='[[baseXlimeServiceUrl]]'></my-dataset>
             </section>
             
             <section data-route="contact">
-                <paper-material elevation="1">
-                    <my-contact></my-contact>
-                </paper-material>
+                <my-contact></my-contact>
             </section>
 
             <section data-route="about">
                 <my-about></my-about>
+            </section>
+
+            <section data-route="backend">
+                <paper-input label="Edit xLiMe public service url" value='{{baseXlimeServiceUrl}}' placeholder='e.g. http://expertsystemlab.com/frontend-services/'></paper-input>
             </section>
           </iron-pages>
         </div>
