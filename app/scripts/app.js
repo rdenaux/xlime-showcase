@@ -17,8 +17,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   // Sets app default base URL
     app.baseUrl = '/';
+    app.production = false;
     app.baseXlimeServiceUrl =
-//        'http://localhost:8080';
+        //'http://localhost:8080';
           'http://expertsystemlab.com/frontend-services';
     app.sectionName = "xLiMe Showcase";
     app.sectionBlurb = "Cross-modal & cross-lingual media browsing";
@@ -29,8 +30,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     
   if (window.location.port === '') {  // if production
     // Uncomment app.baseURL below and
-    // set app.baseURL to '/your-pathname/' if running from folder in production
-    app.baseUrl = '/xlime-showcase-beta/';
+      // set app.baseURL to '/your-pathname/' if running from folder in production
+      app.production = true;
+    app.baseUrl = '/xlime-brexit-showcase/';
   }
 
   app.displayInstalledToast = function() {

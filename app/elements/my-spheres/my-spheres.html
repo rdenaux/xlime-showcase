@@ -62,6 +62,15 @@ This code may only be used under the BSD style license.
          float: left;
      }
 
+       :root {
+           --error-color: red;
+           --separator-color: #dbdbdb;
+           --outer-color: #E8F5E9;
+           --inter-color: #AEEA00;
+           --inner-color: #A5D6A7;
+           --center-color: #F4FF81;           
+           --center-color-2: #C6FF00;
+       }     
     </style>
 
     <!-- If empty, show dialog explaining you can populate the spheres by searching or browsing recent... 
@@ -69,21 +78,15 @@ This code may only be used under the BSD style license.
     <paper-fab id="recentfab" icon="alarm" title="Browse recently published media items and add selected items to the spheres context"
                on-tap="_onRecentElementTap"></paper-fab>
      -->
-    <paper-material id="spheres-card" elevation="1">
-        <iron-ajax id="spheresAjax"
-                   url="[[baseXlimeServiceUrl]]/services/spheres"
-                   params='{"context": []}'
-                   last-response="{{latestSpheres}}"
-                   on-error='_handleAjaxError'
-                   loading="{{_latestSpheresLoading}}"
-                   auto></iron-ajax>
-        <paper-spinner alt="Loading spheres" class="center" active="[[_latestSpheresLoading]]">Loading spheres...</paper-spinner>
-        <xlime-spheres id="spheres" obj="{{latestSpheres}}" selected="{{selectedResource}}" on-spheres-resource-removed="_onSpheresResourceRemoved"></xlime-spheres>
-        <!-- 
-        <showcase-resource base-xlime-service-url="[[baseXlimeServiceUrl]]" resource="{{selectedResource}}">
-        </showcase-resource>
-         -->
-    </paper-material>
+    <iron-ajax id="spheresAjax"
+               url="[[baseXlimeServiceUrl]]/services/spheres"
+               params='{"context": []}'
+               last-response="{{latestSpheres}}"
+               on-error='_handleAjaxError'
+               loading="{{_latestSpheresLoading}}"
+               auto></iron-ajax>
+    <paper-spinner alt="Loading spheres" class="center" active="[[_latestSpheresLoading]]">Loading spheres...</paper-spinner>
+    <xlime-spheres id="spheres" obj="{{latestSpheres}}" selected="{{selectedResource}}" on-spheres-resource-removed="_onSpheresResourceRemoved"></xlime-spheres>
   </template>
 
   <script>

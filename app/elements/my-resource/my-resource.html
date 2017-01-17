@@ -136,8 +136,11 @@ This code may only be used under the BSD style license.
             else return false;
         },
         _onAddContextElementTap: function(e, detail) {
-              
-            var newDetail = {resourceToAdd: this.obj};
+            var res = this.obj;
+            if (this.isEntityAnnotation(this.obj)) {
+                res = this._extractUIEnt(this.obj);
+            }
+            var newDetail = {resourceToAdd: res};
             console.debug("Firing addresource event with detail", newDetail);
             this.fire('addresource', newDetail);
         },

@@ -110,13 +110,13 @@ This code may only be used under the BSD style license.
               <iron-icon icon="xlime-svg:logo"></iron-icon>
               <span>About</span>
           </a>
-          
-              <!--
-          <a data-route="about" href="{{baseUrl}}backend">
+
+          <a hidden="[[production]]" data-route="about" href="{{baseUrl}}backend">
               <iron-icon icon="settings"></iron-icon>
               <span>Config</span>
           </a>
 
+              <!--
           <a data-route="about" href="{{baseUrl}}resource">
               <iron-icon icon="settings"></iron-icon>
               <span>Details</span>
